@@ -1,36 +1,29 @@
 // https://x.com/ChShersh/status/1886499767641104712/photo/1
 
-import gleam/list
-import gleam/option.{None, Some}
 import gleam/result
 import gleam/string
-
-pub type RGBColor =
-  #(Int, Int, Int)
-
-pub type HexColor =
-  String
 
 fn char_code(char: String) {
   let assert [first, ..] = string.to_utf_codepoints(char)
   string.utf_codepoint_to_int(first)
 }
 
-fn of_hex_digit(c: String) {
+fn parse_digit(c: String) {
   case c {
     "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ->
-      Some(char_code(c) - char_code("0"))
+      Ok(char_code(c) - char_code("0"))
     "a" | "b" | "c" | "d" | "e" | "f" -> {
-      Some(char_code(c) - char_code("a") + 10)
+      Ok(char_code(c) - char_code("a") + 10)
     }
-    _ -> None
+    _ -> Error("Invalid character(s) in Hex string")
   }
 }
 
 fn parse_channel(c1: String, c2: String) {
-  let assert Some(digit1) = of_hex_digit(c1)
-  let assert Some(digit2) = of_hex_digit(c2)
-  option.Some(digit1 * 16 + digit2)
+  use digit1 <- result.try(parse_digit(c1))
+  use digit2 <- result.try(parse_digit(c2))
+
+  Ok(digit1 * 16 + digit2)
 }
 
 pub fn hex_to_rgb(hex: String) {
@@ -40,12 +33,20 @@ pub fn hex_to_rgb(hex: String) {
   }
 
   case string.to_graphemes(just_hex) {
-    [r1, r2, g1, g2, b1, b2] -> {
-      let assert Some(red) = parse_channel(r1, r2)
-      let assert Some(green) = parse_channel(g1, g2)
-      let assert Some(blue) = parse_channel(b1, b2)
-      #(red, green, blue)
+    [r1, g1, b1] -> {
+      use red <- result.try(parse_channel(r1, r1))
+      use green <- result.try(parse_channel(g1, g1))
+      use blue <- result.try(parse_channel(b1, b1))
+
+      Ok(#(red, green, blue))
     }
-    _ -> #(0, 0, 0)
+    [r1, r2, g1, g2, b1, b2] -> {
+      use red <- result.try(parse_channel(r1, r2))
+      use green <- result.try(parse_channel(g1, g2))
+      use blue <- result.try(parse_channel(b1, b2))
+
+      Ok(#(red, green, blue))
+    }
+    _ -> Error("Hex string not correct length")
   }
 }
