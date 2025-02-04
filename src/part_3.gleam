@@ -19,6 +19,26 @@ fn parse_digit(c: String) {
   }
 }
 
+// import gleam/bool
+// A bit more imperative, prettier, but slower.
+// fn parse_digit2(c: String) {
+//   let code = char_code(c)
+
+//   let zero_code = char_code("0")
+//   use <- bool.guard(
+//     code >= zero_code && code <= char_code("9"),
+//     Ok(code - zero_code),
+//   )
+
+//   let a_code = char_code("a")
+//   use <- bool.guard(
+//     code >= a_code && code <= char_code("f"),
+//     Ok(code - a_code + 10),
+//   )
+
+//   Error("Invalid character(s) in Hex string")
+// }
+
 fn parse_channel(c1: String, c2: String) {
   use digit1 <- result.try(parse_digit(c1))
   use digit2 <- result.try(parse_digit(c2))
